@@ -4,28 +4,23 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.validation.constraints.NotNull;
 
 @Entity
 public class TaskItem {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @NotNull(message = "Title oruulna uu!")
-    private String title;
-
-    private boolean done;
+    private String name;
 
     public TaskItem() {
     }
 
-    public TaskItem(String title) {
-        this.title = title;
-        this.done = false;
+    public TaskItem(String name) {
+        this.name = name;
     }
 
+    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -34,19 +29,11 @@ public class TaskItem {
         this.id = id;
     }
 
-    public @NotNull(message = "Title oruulna uu!") String getTitle() {
-        return title;
+    public String getName() {
+        return name;
     }
 
-    public void setTitle(@NotNull(message = "Title oruulna uu!") String title) {
-        this.title = title;
-    }
-
-    public boolean isDone() {
-        return done;
-    }
-
-    public void setDone(boolean done) {
-        this.done = done;
+    public void setName(String name) {
+        this.name = name;
     }
 }
