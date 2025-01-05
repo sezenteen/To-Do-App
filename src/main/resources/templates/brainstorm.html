@@ -5,13 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>To-Do App</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&display=swap" rel="stylesheet">
+    <style>
+        /* Styles for the brainstorming feature */
+        #ideas-container {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4); /* Cute gradient */
+            border-radius: 16px;
+            margin-top: 2rem;
+            border: 4px dashed #ff80bf; /* Cute dashed border */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Adds depth */
+        }
+        .idea {
+            position: absolute;
+            padding: 10px 20px;
+            background-color: rgba(255, 255, 255, 0.85); /* Chalk-like background */
+            color: #2b2b2b; /* Text color for contrast */
+            border-radius: 12px;
+            font-family: 'Gloria Hallelujah', cursive; /* Chalkboard-like font */
+            font-size: 1.2rem;
+            box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); /* Subtle shadow for a lifted effect */
+            border: 2px solid #ffc3a0; /* Border for the idea bubbles */
+            white-space: nowrap;
+            animation: bounce 3s infinite ease-in-out;
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+    </style>
 </head>
 <body class="font-sans bg-gray-50">
 
 <!-- Main Content -->
 <main
         class="w-full h-screen bg-cover bg-center bg-no-repeat relative"
-        style="background-image: url('/images/4.png');">
+        style="background-image: url('/images/7.png');">
 
     <!-- Optional Overlay for Better Text Visibility -->
     <div class="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-white"></div>
@@ -36,41 +73,85 @@
 
         <!-- Hero Section -->
         <div class="text-center mt-16 text-white">
-            <h2 class="text-5xl font-extrabold mb-4">Organize Your Day</h2>
+            <h2 class="text-5xl font-extrabold mb-4">Make A Fun Brainstorm</h2>
         </div>
 
-        <!-- To-Do List -->
-        <div class="bg-white shadow-2xl rounded-lg p-8 max-w-2xl mx-auto mt-12">
-            <h2 class="text-2xl font-bold text-purple-600 mb-6 text-center">My To-Do List</h2>
+        <!-- Brainstorm Section -->
+        <div class="bg-white shadow-2xl rounded-lg p-8 max-w-3xl mx-auto mt-12">
+            <h2 class="text-2xl font-bold text-purple-600 mb-6 text-center">Brainstorm Ideas</h2>
 
             <!-- Input Field -->
-            <div class="flex items-center mb-6">
+            <div class="flex items-center mb-4">
                 <input
+                        id="idea-input"
                         type="text"
-                        placeholder="Add a new task..."
+                        placeholder="Type your idea..."
                         class="w-full border rounded-l-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-400"
                 />
                 <button
+                        id="add-button"
                         class="bg-purple-600 text-white px-6 py-3 rounded-r-lg hover:bg-purple-700"
                 >Add</button>
             </div>
 
-            <!-- Task List -->
-            <ul class="space-y-4">
-                <li class="flex items-center bg-gray-100 px-4 py-3 rounded-lg shadow-md">
-                    <input type="checkbox" class="mr-3 w-5 h-5 text-purple-500 rounded focus:ring-purple-400">
-                    <span class="flex-grow text-gray-700 text-lg">Learn Tailwind CSS</span>
-                    <button class="text-red-500 hover:text-red-600 text-xl font-bold">✕</button>
-                </li>
-                <li class="flex items-center bg-gray-100 px-4 py-3 rounded-lg shadow-md">
-                    <input type="checkbox" class="mr-3 w-5 h-5 text-purple-500 rounded focus:ring-purple-400">
-                    <span class="flex-grow text-gray-700 text-lg">Build a to-do list</span>
-                    <button class="text-red-500 hover:text-red-600 text-xl font-bold">✕</button>
-                </li>
-            </ul>
+            <!-- Ideas Container -->
+            <div id="ideas-container"></div>
         </div>
     </div>
 </main>
+
+<script>
+    const ideasContainer = document.getElementById("ideas-container");
+    const input = document.getElementById("idea-input");
+    const addButton = document.getElementById("add-button");
+
+    addButton.addEventListener("click", addIdea);
+
+    function addIdea() {
+        const text = input.value.trim();
+        if (!text) return;
+
+        const idea = document.createElement("div");
+        idea.classList.add("idea");
+        idea.textContent = text;
+
+        // Set random initial position
+        const x = Math.random() * (ideasContainer.clientWidth - 150);
+        const y = Math.random() * (ideasContainer.clientHeight - 50);
+        idea.style.left = `${x}px`;
+        idea.style.top = `${y}px`;
+
+        ideasContainer.appendChild(idea);
+        moveIdea(idea);
+        input.value = "";
+    }
+
+    function moveIdea(idea) {
+        let x = parseFloat(idea.style.left);
+        let y = parseFloat(idea.style.top);
+        let dx = Math.random() < 0.5 ? 2 : -2;
+        let dy = Math.random() < 0.5 ? 2 : -2;
+
+        function update() {
+            x += dx;
+            y += dy;
+
+            if (x <= 0 || x >= ideasContainer.clientWidth - idea.offsetWidth) {
+                dx *= -1;
+            }
+            if (y <= 0 || y >= ideasContainer.clientHeight - idea.offsetHeight) {
+                dy *= -1;
+            }
+
+            idea.style.left = `${x}px`;
+            idea.style.top = `${y}px`;
+
+            requestAnimationFrame(update);
+        }
+
+        update();
+    }
+</script>
 
 </body>
 </html>

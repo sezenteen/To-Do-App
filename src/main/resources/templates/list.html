@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>To-Do App</title>
+    <title>To-Do App - Lists</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="font-sans bg-gray-50">
@@ -36,41 +36,156 @@
 
         <!-- Hero Section -->
         <div class="text-center mt-16 text-white">
-            <h2 class="text-5xl font-extrabold mb-4">Organize Your Day</h2>
+            <h2 class="text-5xl font-extrabold mb-4">Organize Your Lists!</h2>
         </div>
 
-        <!-- To-Do List -->
-        <div class="bg-white shadow-2xl rounded-lg p-8 max-w-2xl mx-auto mt-12">
-            <h2 class="text-2xl font-bold text-purple-600 mb-6 text-center">My To-Do List</h2>
+        <!-- List Management Section -->
+        <div class="bg-white shadow-2xl rounded-lg p-8 max-w-3xl mx-auto mt-12">
+            <h2 class="text-2xl font-bold text-purple-600 mb-6 text-center">Manage Your Lists</h2>
 
-            <!-- Input Field -->
-            <div class="flex items-center mb-6">
+            <!-- Add New List -->
+            <div class="mb-6">
                 <input
+                        id="list-title"
                         type="text"
-                        placeholder="Add a new task..."
+                        placeholder="Enter list title..."
                         class="w-full border rounded-l-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-400"
                 />
                 <button
-                        class="bg-purple-600 text-white px-6 py-3 rounded-r-lg hover:bg-purple-700"
-                >Add</button>
+                        id="add-list-button"
+                        class="bg-purple-600 text-white px-6 py-3 rounded hover:bg-purple-700 mt-2"
+                >Add List</button>
             </div>
 
-            <!-- Task List -->
-            <ul class="space-y-4">
-                <li class="flex items-center bg-gray-100 px-4 py-3 rounded-lg shadow-md">
-                    <input type="checkbox" class="mr-3 w-5 h-5 text-purple-500 rounded focus:ring-purple-400">
-                    <span class="flex-grow text-gray-700 text-lg">Learn Tailwind CSS</span>
-                    <button class="text-red-500 hover:text-red-600 text-xl font-bold">✕</button>
-                </li>
-                <li class="flex items-center bg-gray-100 px-4 py-3 rounded-lg shadow-md">
-                    <input type="checkbox" class="mr-3 w-5 h-5 text-purple-500 rounded focus:ring-purple-400">
-                    <span class="flex-grow text-gray-700 text-lg">Build a to-do list</span>
-                    <button class="text-red-500 hover:text-red-600 text-xl font-bold">✕</button>
-                </li>
-            </ul>
+            <!-- Lists Container -->
+            <div id="lists-container" class="space-y-6">
+                <!-- Lists will appear here -->
+            </div>
         </div>
     </div>
 </main>
+
+<script>
+    const listsContainer = document.getElementById("lists-container");
+    const listTitleInput = document.getElementById("list-title");
+    const addListButton = document.getElementById("add-list-button");
+
+    // Load lists from localStorage on page load
+    window.onload = function () {
+        const savedLists = JSON.parse(localStorage.getItem("lists")) || {};
+        for (const [title, items] of Object.entries(savedLists)) {
+            addListToUI(title, items);
+        }
+    };
+
+    addListButton.addEventListener("click", () => {
+        const title = listTitleInput.value.trim();
+        if (!title) return;
+
+        // Save list to localStorage
+        const savedLists = JSON.parse(localStorage.getItem("lists")) || {};
+        if (!savedLists[title]) {
+            savedLists[title] = [];
+            localStorage.setItem("lists", JSON.stringify(savedLists));
+            addListToUI(title);
+        }
+
+        listTitleInput.value = "";
+    });
+
+    function addListToUI(title, items = []) {
+        const listContainer = document.createElement("div");
+        listContainer.className = "bg-gray-100 p-4 rounded-lg shadow";
+
+        const listHeader = document.createElement("div");
+        listHeader.className = "flex justify-between items-center mb-4";
+
+        const listTitle = document.createElement("h3");
+        listTitle.textContent = title;
+        listTitle.className = "text-xl font-bold text-gray-800";
+
+        const deleteListButton = document.createElement("button");
+        deleteListButton.textContent = "Delete List";
+        deleteListButton.className = "bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600";
+        deleteListButton.addEventListener("click", () => {
+            deleteList(title, listContainer);
+        });
+
+        listHeader.appendChild(listTitle);
+        listHeader.appendChild(deleteListButton);
+
+        const listItemsContainer = document.createElement("ul");
+        listItemsContainer.className = "space-y-2";
+
+        items.forEach(item => addItemToUI(listItemsContainer, title, item));
+
+        const addItemContainer = document.createElement("div");
+        addItemContainer.className = "flex mt-4";
+
+        const addItemInput = document.createElement("input");
+        addItemInput.type = "text";
+        addItemInput.placeholder = "Add an item...";
+        addItemInput.className = "w-full border rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400";
+
+        const addItemButton = document.createElement("button");
+        addItemButton.textContent = "Add Item";
+        addItemButton.className = "bg-purple-600 text-white px-4 py-2 rounded-r-lg hover:bg-purple-700";
+        addItemButton.addEventListener("click", () => {
+            const itemText = addItemInput.value.trim();
+            if (itemText) {
+                const savedLists = JSON.parse(localStorage.getItem("lists"));
+                savedLists[title].push(itemText);
+                localStorage.setItem("lists", JSON.stringify(savedLists));
+                addItemToUI(listItemsContainer, title, itemText);
+                addItemInput.value = "";
+            }
+        });
+
+        addItemContainer.appendChild(addItemInput);
+        addItemContainer.appendChild(addItemButton);
+
+        listContainer.appendChild(listHeader);
+        listContainer.appendChild(listItemsContainer);
+        listContainer.appendChild(addItemContainer);
+
+        listsContainer.appendChild(listContainer);
+    }
+
+    function addItemToUI(listItemsContainer, listTitle, itemText) {
+        const itemElement = document.createElement("li");
+        itemElement.className = "flex justify-between items-center bg-white px-4 py-2 rounded shadow";
+
+        const itemContent = document.createElement("span");
+        itemContent.textContent = itemText;
+        itemContent.className = "text-gray-700 flex-grow";
+
+        const deleteItemButton = document.createElement("button");
+        deleteItemButton.textContent = "✕";
+        deleteItemButton.className = "text-red-500 hover:text-red-600 font-bold text-lg";
+        deleteItemButton.addEventListener("click", () => {
+            deleteItem(listTitle, itemText, itemElement);
+        });
+
+        itemElement.appendChild(itemContent);
+        itemElement.appendChild(deleteItemButton);
+
+        listItemsContainer.appendChild(itemElement);
+    }
+
+    function deleteList(title, listContainer) {
+        const savedLists = JSON.parse(localStorage.getItem("lists"));
+        delete savedLists[title];
+        localStorage.setItem("lists", JSON.stringify(savedLists));
+        listContainer.remove();
+    }
+
+    function deleteItem(listTitle, itemText, itemElement) {
+        const savedLists = JSON.parse(localStorage.getItem("lists"));
+        savedLists[listTitle] = savedLists[listTitle].filter(item => item !== itemText);
+        localStorage.setItem("lists", JSON.stringify(savedLists));
+        itemElement.remove();
+    }
+</script>
 
 </body>
 </html>

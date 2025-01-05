@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>To-Do Do</title>
+    <title>To-Do Do - Tasks</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="font-sans bg-gray-50">
@@ -36,7 +36,7 @@
 
         <!-- Hero Section -->
         <div class="text-center mt-16 text-white">
-            <h2 class="text-5xl font-extrabold mb-4">Organize Your Day</h2>
+            <h2 class="text-5xl font-extrabold mb-4">Organize Your Tasks</h2>
         </div>
 
         <!-- To-Do List -->
@@ -46,83 +46,114 @@
             <!-- Input Field -->
             <div class="flex items-center mb-6">
                 <input
+                        id="task-input"
                         type="text"
                         placeholder="Add a new task..."
                         class="w-full border rounded-l-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-400"
                 />
                 <button
+                        id="add-task-btn"
                         class="bg-purple-600 text-white px-6 py-3 rounded-r-lg hover:bg-purple-700"
                 >Add</button>
             </div>
-            <script>
-                const apiUrl = "/tasks";
-                const taskList = document.querySelector("ul.space-y-4");
-                const inputField = document.querySelector("input[type='text']");
-                const addButton = document.querySelector("button.bg-purple-600");
-
-                // Function to load tasks
-                async function loadTasks() {
-                    const response = await fetch(apiUrl);
-                    const tasks = await response.json();
-
-                    // Clear current tasks
-                    taskList.innerHTML = "";
-
-                    // Render tasks
-                    tasks.forEach(task => {
-                        const taskItem = document.createElement("li");
-                        taskItem.className = "flex items-center bg-gray-100 px-4 py-3 rounded-lg shadow-md";
-                        taskItem.innerHTML = `
-                <input type="checkbox" class="mr-3 w-5 h-5 text-purple-500 rounded focus:ring-purple-400">
-                <span class="flex-grow text-gray-700 text-lg">${task.name}</span>
-                <button class="text-red-500 hover:text-red-600 text-xl font-bold" data-id="${task.id}">✕</button>
-            `;
-                        taskList.appendChild(taskItem);
-
-                        // Delete task
-                        const deleteButton = taskItem.querySelector("button");
-                        deleteButton.addEventListener("click", async () => {
-                            await fetch(`${apiUrl}/${task.id}`, { method: "DELETE" });
-                            loadTasks();
-                        });
-                    });
-                }
-
-                // Add task
-                addButton.addEventListener("click", async () => {
-                    const taskName = inputField.value.trim();
-                    if (taskName) {
-                        await fetch(`${apiUrl}/add`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ name: taskName })
-                        });
-                        inputField.value = "";
-                        loadTasks();
-                    }
-                });
-
-                // Initial load
-                loadTasks();
-            </script>
-
 
             <!-- Task List -->
-            <ul class="space-y-4">
-                <li class="flex items-center bg-gray-100 px-4 py-3 rounded-lg shadow-md">
-                    <input type="checkbox" class="mr-3 w-5 h-5 text-purple-500 rounded focus:ring-purple-400">
-                    <span class="flex-grow text-gray-700 text-lg">Learn Tailwind CSS</span>
-                    <button class="text-red-500 hover:text-red-600 text-xl font-bold">✕</button>
-                </li>
-                <li class="flex items-center bg-gray-100 px-4 py-3 rounded-lg shadow-md">
-                    <input type="checkbox" class="mr-3 w-5 h-5 text-purple-500 rounded focus:ring-purple-400">
-                    <span class="flex-grow text-gray-700 text-lg">Build a to-do list</span>
-                    <button class="text-red-500 hover:text-red-600 text-xl font-bold">✕</button>
-                </li>
+            <ul id="task-list" class="space-y-4">
+                <!-- Dynamic tasks will appear here -->
             </ul>
         </div>
     </div>
 </main>
+
+<script>
+    // Variables
+    const taskInput = document.getElementById('task-input');
+    const addTaskBtn = document.getElementById('add-task-btn');
+    const taskList = document.getElementById('task-list');
+    const apiUrl = '/tasks'; // Adjust API endpoint as needed.
+
+    // Function to Load Tasks
+    async function loadTasks() {
+        try {
+            const response = await fetch(apiUrl);
+            const tasks = await response.json();
+
+            // Clear current tasks
+            taskList.innerHTML = '';
+
+            // Render tasks
+            tasks.forEach(task => renderTask(task));
+        } catch (error) {
+            console.error('Error loading tasks:', error);
+        }
+    }
+
+    // Function to Render a Single Task
+    function renderTask(task) {
+        const taskItem = document.createElement('li');
+        taskItem.className = 'flex items-center bg-gray-100 px-4 py-3 rounded-lg shadow-md';
+
+        taskItem.innerHTML = `
+            <input
+                type="checkbox"
+                class="mr-3 w-5 h-5 text-purple-500 rounded focus:ring-purple-400"
+                ${task.completed ? 'checked' : ''}>
+            <span class="flex-grow text-gray-700 text-lg">${task.name}</span>
+            <button
+                class="text-red-500 hover:text-red-600 text-xl font-bold"
+                data-id="${task.id}">✕</button>
+        `;
+
+        // Mark Task as Completed
+        const checkbox = taskItem.querySelector('input[type="checkbox"]');
+        checkbox.addEventListener('change', async () => {
+            try {
+                await fetch(`${apiUrl}/${task.id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ completed: checkbox.checked })
+                });
+                loadTasks();
+            } catch (error) {
+                console.error('Error updating task:', error);
+            }
+        });
+
+        // Delete Task
+        const deleteBtn = taskItem.querySelector('button');
+        deleteBtn.addEventListener('click', async () => {
+            try {
+                await fetch(`${apiUrl}/${task.id}`, { method: 'DELETE' });
+                loadTasks();
+            } catch (error) {
+                console.error('Error deleting task:', error);
+            }
+        });
+
+        taskList.appendChild(taskItem);
+    }
+
+    // Add New Task
+    addTaskBtn.addEventListener('click', async () => {
+        const taskName = taskInput.value.trim();
+        if (taskName) {
+            try {
+                await fetch(`${apiUrl}/add`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: taskName, completed: false })
+                });
+                taskInput.value = '';
+                loadTasks();
+            } catch (error) {
+                console.error('Error adding task:', error);
+            }
+        }
+    });
+
+    // Initial Load
+    loadTasks();
+</script>
 
 </body>
 </html>

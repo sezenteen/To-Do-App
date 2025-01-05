@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>To-Do App</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for drawing canvas */
+        #drawingCanvas {
+            border: 2px solid #4a5568; /* Canvas border */
+            border-radius: 8px;
+            background: white;
+            cursor: crosshair;
+        }
+    </style>
 </head>
 <body class="font-sans bg-gray-50">
 
@@ -36,41 +45,94 @@
 
         <!-- Hero Section -->
         <div class="text-center mt-16 text-white">
-            <h2 class="text-5xl font-extrabold mb-4">Organize Your Day</h2>
+            <h2 class="text-5xl font-extrabold mb-4">Let's Draw Something Fun!</h2>
         </div>
 
-        <!-- To-Do List -->
-        <div class="bg-white shadow-2xl rounded-lg p-8 max-w-2xl mx-auto mt-12">
-            <h2 class="text-2xl font-bold text-purple-600 mb-6 text-center">My To-Do List</h2>
+        <!-- Drawing Section -->
+        <div class="bg-white shadow-2xl rounded-lg p-8 max-w-3xl mx-auto mt-12">
+            <h2 class="text-2xl font-bold text-purple-600 mb-6 text-center">Drawing Board</h2>
 
-            <!-- Input Field -->
-            <div class="flex items-center mb-6">
-                <input
-                        type="text"
-                        placeholder="Add a new task..."
-                        class="w-full border rounded-l-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                />
+            <!-- Drawing Tools -->
+            <div class="flex justify-center space-x-4 mb-6">
+                <label class="flex items-center space-x-2">
+                    <span class="text-gray-600 font-bold">Color:</span>
+                    <input type="color" id="colorPicker" value="#000000" class="w-10 h-10 border rounded-lg">
+                </label>
+                <label class="flex items-center space-x-2">
+                    <span class="text-gray-600 font-bold">Brush Size:</span>
+                    <input type="range" id="brushSize" min="1" max="20" value="5" class="w-32">
+                </label>
                 <button
-                        class="bg-purple-600 text-white px-6 py-3 rounded-r-lg hover:bg-purple-700"
-                >Add</button>
+                        id="clearCanvas"
+                        class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
+                >Clear</button>
             </div>
 
-            <!-- Task List -->
-            <ul class="space-y-4">
-                <li class="flex items-center bg-gray-100 px-4 py-3 rounded-lg shadow-md">
-                    <input type="checkbox" class="mr-3 w-5 h-5 text-purple-500 rounded focus:ring-purple-400">
-                    <span class="flex-grow text-gray-700 text-lg">Learn Tailwind CSS</span>
-                    <button class="text-red-500 hover:text-red-600 text-xl font-bold">✕</button>
-                </li>
-                <li class="flex items-center bg-gray-100 px-4 py-3 rounded-lg shadow-md">
-                    <input type="checkbox" class="mr-3 w-5 h-5 text-purple-500 rounded focus:ring-purple-400">
-                    <span class="flex-grow text-gray-700 text-lg">Build a to-do list</span>
-                    <button class="text-red-500 hover:text-red-600 text-xl font-bold">✕</button>
-                </li>
-            </ul>
+            <!-- Drawing Canvas -->
+            <div class="flex justify-center">
+                <canvas id="drawingCanvas" width="600" height="400"></canvas>
+            </div>
         </div>
     </div>
 </main>
+
+<script>
+    const canvas = document.getElementById("drawingCanvas");
+    const ctx = canvas.getContext("2d");
+    const colorPicker = document.getElementById("colorPicker");
+    const brushSize = document.getElementById("brushSize");
+    const clearCanvas = document.getElementById("clearCanvas");
+
+    let isDrawing = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    canvas.addEventListener("mousedown", startDrawing);
+    canvas.addEventListener("mousemove", draw);
+    canvas.addEventListener("mouseup", stopDrawing);
+    canvas.addEventListener("mouseout", stopDrawing);
+    canvas.addEventListener("touchstart", startDrawing, { passive: true });
+    canvas.addEventListener("touchmove", draw, { passive: true });
+    canvas.addEventListener("touchend", stopDrawing);
+
+    clearCanvas.addEventListener("click", () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+
+    function startDrawing(e) {
+        isDrawing = true;
+        [lastX, lastY] = getCoordinates(e);
+    }
+
+    function draw(e) {
+        if (!isDrawing) return;
+
+        const [x, y] = getCoordinates(e);
+        ctx.strokeStyle = colorPicker.value;
+        ctx.lineWidth = brushSize.value;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        [lastX, lastY] = [x, y];
+    }
+
+    function stopDrawing() {
+        isDrawing = false;
+        ctx.beginPath(); // Reset path
+    }
+
+    function getCoordinates(e) {
+        if (e.touches && e.touches.length > 0) {
+            return [
+                e.touches[0].clientX - canvas.getBoundingClientRect().left,
+                e.touches[0].clientY - canvas.getBoundingClientRect().top
+            ];
+        }
+        return [e.offsetX, e.offsetY];
+    }
+</script>
 
 </body>
 </html>

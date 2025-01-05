@@ -3,8 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>To-Do App</title>
+    <title>To-Do App - Note Taking</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        #notes-container {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
 </head>
 <body class="font-sans bg-gray-50">
 
@@ -36,41 +42,104 @@
 
         <!-- Hero Section -->
         <div class="text-center mt-16 text-white">
-            <h2 class="text-5xl font-extrabold mb-4">Organize Your Day</h2>
+            <h2 class="text-5xl font-extrabold mb-4">Take Notes Easily!</h2>
         </div>
 
-        <!-- To-Do List -->
-        <div class="bg-white shadow-2xl rounded-lg p-8 max-w-2xl mx-auto mt-12">
-            <h2 class="text-2xl font-bold text-purple-600 mb-6 text-center">My To-Do List</h2>
+        <!-- Note Taking Section -->
+        <div class="bg-white shadow-2xl rounded-lg p-8 max-w-3xl mx-auto mt-12">
+            <h2 class="text-2xl font-bold text-purple-600 mb-6 text-center">Notes</h2>
 
-            <!-- Input Field -->
-            <div class="flex items-center mb-6">
-                <input
-                        type="text"
-                        placeholder="Add a new task..."
-                        class="w-full border rounded-l-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                />
+            <!-- Input Area -->
+            <div class="mb-4">
+                <textarea
+                        id="note-input"
+                        rows="4"
+                        placeholder="Write your note here..."
+                        class="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none"
+                ></textarea>
+            </div>
+            <div class="flex justify-between">
                 <button
-                        class="bg-purple-600 text-white px-6 py-3 rounded-r-lg hover:bg-purple-700"
-                >Add</button>
+                        id="save-button"
+                        class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700"
+                >Save Note</button>
+                <button
+                        id="clear-all"
+                        class="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600"
+                >Clear All</button>
             </div>
 
-            <!-- Task List -->
-            <ul class="space-y-4">
-                <li class="flex items-center bg-gray-100 px-4 py-3 rounded-lg shadow-md">
-                    <input type="checkbox" class="mr-3 w-5 h-5 text-purple-500 rounded focus:ring-purple-400">
-                    <span class="flex-grow text-gray-700 text-lg">Learn Tailwind CSS</span>
-                    <button class="text-red-500 hover:text-red-600 text-xl font-bold">✕</button>
-                </li>
-                <li class="flex items-center bg-gray-100 px-4 py-3 rounded-lg shadow-md">
-                    <input type="checkbox" class="mr-3 w-5 h-5 text-purple-500 rounded focus:ring-purple-400">
-                    <span class="flex-grow text-gray-700 text-lg">Build a to-do list</span>
-                    <button class="text-red-500 hover:text-red-600 text-xl font-bold">✕</button>
-                </li>
-            </ul>
+            <!-- Notes Display -->
+            <div id="notes-container" class="mt-6 space-y-4 bg-gray-50 p-4 rounded-lg shadow-inner">
+                <!-- Notes will appear here -->
+            </div>
         </div>
     </div>
 </main>
+
+<script>
+    const noteInput = document.getElementById("note-input");
+    const saveButton = document.getElementById("save-button");
+    const notesContainer = document.getElementById("notes-container");
+    const clearAllButton = document.getElementById("clear-all");
+
+    // Load notes from localStorage on page load
+    window.onload = function () {
+        const savedNotes = JSON.parse(localStorage.getItem("notes")) || [];
+        savedNotes.forEach(addNoteToUI);
+    };
+
+    saveButton.addEventListener("click", () => {
+        const noteText = noteInput.value.trim();
+        if (!noteText) return;
+
+        // Save note to localStorage
+        const savedNotes = JSON.parse(localStorage.getItem("notes")) || [];
+        savedNotes.push(noteText);
+        localStorage.setItem("notes", JSON.stringify(savedNotes));
+
+        // Add note to UI
+        addNoteToUI(noteText);
+
+        // Clear the input
+        noteInput.value = "";
+    });
+
+    clearAllButton.addEventListener("click", () => {
+        if (confirm("Are you sure you want to delete all notes?")) {
+            localStorage.removeItem("notes");
+            notesContainer.innerHTML = "";
+        }
+    });
+
+    function addNoteToUI(noteText) {
+        const noteElement = document.createElement("div");
+        noteElement.className = "flex justify-between items-center bg-purple-100 p-3 rounded-lg shadow";
+
+        const noteContent = document.createElement("span");
+        noteContent.textContent = noteText;
+        noteContent.className = "text-gray-700 flex-grow";
+
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "✕";
+        deleteButton.className = "text-red-500 hover:text-red-600 font-bold text-lg";
+        deleteButton.addEventListener("click", () => {
+            deleteNote(noteText);
+            noteElement.remove();
+        });
+
+        noteElement.appendChild(noteContent);
+        noteElement.appendChild(deleteButton);
+
+        notesContainer.appendChild(noteElement);
+    }
+
+    function deleteNote(noteText) {
+        const savedNotes = JSON.parse(localStorage.getItem("notes")) || [];
+        const updatedNotes = savedNotes.filter(note => note !== noteText);
+        localStorage.setItem("notes", JSON.stringify(updatedNotes));
+    }
+</script>
 
 </body>
 </html>
