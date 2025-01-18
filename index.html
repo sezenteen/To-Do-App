@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for drawing canvas */
+        #drawingCanvas {
+            border: 2px solid #4a5568; /* Canvas border */
+            border-radius: 8px;
+            background: white;
+            cursor: crosshair;
+        }
+    </style>
+</head>
+<body class="font-sans bg-gray-50">
+
+<!-- Main Content -->
+<main
+        class="w-full h-screen bg-cover bg-center bg-no-repeat relative"
+        style="background-image: url('/images/3.png');">
+
+    <!-- Optional Overlay for Better Text Visibility -->
+    <div class="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-white"></div>
+
+    <!-- Content on Top of Background -->
+    <div class="relative z-10 container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="text-white">
+            <div class="flex justify-between items-center">
+                <h1 class="text-4xl font-extrabold tracking-wide">To-Do Do</h1>
+                <nav>
+                    <ul class="flex space-x-6 text-lg">
+                        <li><a th:href="@{/}" class="hover:underline">Tasks</a></li>
+                        <li><a th:href="@{/list}" class="hover:underline">Lists</a></li>
+                        <li><a th:href="@{/brainstorm}" class="hover:underline">Brainstorm</a></li>
+                        <li><a th:href="@{/note}" class="hover:underline">Note</a></li>
+                        <li><a th:href="@{/draw}" class="hover:underline">Draw</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <div class="text-center mt-16 text-white">
+            <h2 class="text-5xl font-extrabold mb-4">Let's Draw Something Fun!</h2>
+        </div>
+
+        <!-- Drawing Section -->
+        <div class="bg-white shadow-2xl rounded-lg p-8 max-w-3xl mx-auto mt-12">
+            <h2 class="text-2xl font-bold text-purple-600 mb-6 text-center">Drawing Board</h2>
+
+            <!-- Drawing Tools -->
+            <div class="flex justify-center space-x-4 mb-6">
+                <label class="flex items-center space-x-2">
+                    <span class="text-gray-600 font-bold">Color:</span>
+                    <input type="color" id="colorPicker" value="#000000" class="w-10 h-10 border rounded-lg">
+                </label>
+                <label class="flex items-center space-x-2">
+                    <span class="text-gray-600 font-bold">Brush Size:</span>
+                    <input type="range" id="brushSize" min="1" max="20" value="5" class="w-32">
+                </label>
+                <button
+                        id="clearCanvas"
+                        class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
+                >Clear</button>
+            </div>
+
+            <!-- Drawing Canvas -->
+            <div class="flex justify-center">
+                <canvas id="drawingCanvas" width="600" height="400"></canvas>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    const canvas = document.getElementById("drawingCanvas");
+    const ctx = canvas.getContext("2d");
+    const colorPicker = document.getElementById("colorPicker");
+    const brushSize = document.getElementById("brushSize");
+    const clearCanvas = document.getElementById("clearCanvas");
+
+    let isDrawing = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    canvas.addEventListener("mousedown", startDrawing);
+    canvas.addEventListener("mousemove", draw);
+    canvas.addEventListener("mouseup", stopDrawing);
+    canvas.addEventListener("mouseout", stopDrawing);
+    canvas.addEventListener("touchstart", startDrawing, { passive: true });
+    canvas.addEventListener("touchmove", draw, { passive: true });
+    canvas.addEventListener("touchend", stopDrawing);
+
+    clearCanvas.addEventListener("click", () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+
+    function startDrawing(e) {
+        isDrawing = true;
+        [lastX, lastY] = getCoordinates(e);
+    }
+
+    function draw(e) {
+        if (!isDrawing) return;
+
+        const [x, y] = getCoordinates(e);
+        ctx.strokeStyle = colorPicker.value;
+        ctx.lineWidth = brushSize.value;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        [lastX, lastY] = [x, y];
+    }
+
+    function stopDrawing() {
+        isDrawing = false;
+        ctx.beginPath(); // Reset path
+    }
+
+    function getCoordinates(e) {
+        if (e.touches && e.touches.length > 0) {
+            return [
+                e.touches[0].clientX - canvas.getBoundingClientRect().left,
+                e.touches[0].clientY - canvas.getBoundingClientRect().top
+            ];
+        }
+        return [e.offsetX, e.offsetY];
+    }
+</script>
+
+</body>
+</html>
